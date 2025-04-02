@@ -1,0 +1,33 @@
+# Unreal Engine asset files
+*.uasset filter=lfs diff=none merge=lfs -text
+*.umap  filter=lfs diff=none merge=lfs -text
+
+# 3D model files
+*.fbx   filter=lfs diff=none merge=lfs -text
+*.obj   filter=lfs diff=none merge=lfs -text
+
+# Texture and image files
+*.png   filter=lfs diff=none merge=lfs -text
+*.jpg   filter=lfs diff=none merge=lfs -text
+*.jpeg  filter=lfs diff=none merge=lfs -text
+*.tga   filter=lfs diff=none merge=lfs -text
+*.bmp   filter=lfs diff=none merge=lfs -text
+*.exr   filter=lfs diff=none merge=lfs -text
+*.tiff  filter=lfs diff=none merge=lfs -text
+
+# Audio files
+*.wav   filter=lfs diff=none merge=lfs -text
+*.mp3   filter=lfs diff=none merge=lfs -text
+*.ogg   filter=lfs diff=none merge=lfs -text
+
+# Video files
+*.mp4   filter=lfs diff=none merge=lfs -text
+*.mov   filter=lfs diff=none merge=lfs -text
+*.avi   filter=lfs diff=none merge=lfs -text
+
+# Photoshop and other design files
+*.psd   filter=lfs diff=none merge=lfs -text
+
+# Compressed archives and other binaries (if applicable)
+*.zip   filter=lfs diff=none merge=lfs -text
+*.rar   filter=lfs diff=none merge=lfs -text
