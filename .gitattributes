@@ -5,6 +5,7 @@
 # 3D model files
 *.fbx   filter=lfs diff=none merge=lfs -text
 *.obj   filter=lfs diff=none merge=lfs -text
+*.sbsar filter=lfs diff=none merge=lfs -text
 
 # Texture and image files
 *.png   filter=lfs diff=none merge=lfs -text
