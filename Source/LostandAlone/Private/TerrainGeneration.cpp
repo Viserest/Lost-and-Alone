@@ -18,7 +18,7 @@ void ATerrainGeneration::BeginPlay()
 	
 }
 
-void GenerateTerrain() {
+void ATerrainGeneration::GenerateTerrain() {
     // vertice components
     TArray<FVector> Vertices;
     TArray<int32> Triangles;
