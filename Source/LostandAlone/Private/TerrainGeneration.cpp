@@ -47,6 +47,7 @@ void GenerateTerrain() {
         for (int32 y = 0; y < Depth; y++) {
             int32 Index = x * (Depth + 1) + y;
 
+            // Creating a square so two triangle sections are needed
             Triangles.Add(Index);
             Triangles.Add(Index + Depth + 1);
             Triangles.Add(Index + 1);
