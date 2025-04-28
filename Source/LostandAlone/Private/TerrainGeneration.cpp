@@ -4,70 +4,55 @@
 ATerrainGeneration::ATerrainGeneration()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
-    UProceduralMeshComponent* Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
+    Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
     RootComponent = Mesh;
-
 }
 
 void ATerrainGeneration::BeginPlay()
 {
 	Super::BeginPlay();
-
-    GenerateTerrain();
-	
+    GenerateTerrain(128, 128, 100.0f, 50.0f);
 }
 
-void ATerrainGeneration::GenerateTerrain() {
-    // vertice components
+void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY, float Scale, float HeightScale)
+{
     TArray<FVector> Vertices;
     TArray<int32> Triangles;
     TArray<FVector> Normals;
     TArray<FVector2D> UVs;
-    TArray<FLinearColor> VertexColors;
     TArray<FProcMeshTangent> Tangents;
 
-    int32 Width = 100;
-    int32 Depth = 100;
-    float Scale = 20.0f;
-    float HeightMultiplier = 100.0f;
-
-    // loop over width and depth to generate height
-    for (int32 x = 0; x <= Width; x++) {
-        for (int32 y = 0; y <= Depth; y++) {
-            // Generate height from perlin noise
-            float Height = FMath::PerlinNoise2D(FVector2D(x, y) / Scale) * HeightMultiplier;
-            Vertices.Add(FVector(x * 100, y * 100, Height));
-            UVs.Add(FVector2D((float)x / Width, (float)y / Depth));
-        }
-    }
-
-    // Add each triangle section
-    for (int32 x = 0; x < Width; x++) {
-        for (int32 y = 0; y < Depth; y++) {
-            int32 Index = x * (Depth + 1) + y;
-
-            // Creating a square so two triangle sections are needed
-            Triangles.Add(Index);
-            Triangles.Add(Index + Depth + 1);
-            Triangles.Add(Index + 1);
-
-            Triangles.Add(Index + 1);
-            Triangles.Add(Index + Depth + 1);
-            Triangles.Add(Index + Depth + 2);
-        }
-    }
-
-    // Add section to procedural mesh
-    Mesh->CreateMeshSection_LinearColor(
-        0, Vertices, Triangles, Normals, UVs, VertexColors, Tangents, true
-    );
-
-    // Get basic material and add to mesh
-    ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial'"));
-    if (Material.Succeeded())
+    // Create grid of vertices
+    for (int32 y = 0; y <= SizeY; y++)
     {
-        Mesh->SetMaterial(1, Material.Object);
+        for (int32 x = 0; x <= SizeX; x++)
+        {
+            float XPos = x * Scale;
+            float YPos = y * Scale;
+            float Noise = FMath::PerlinNoise2D(FVector2D(x, y) * 0.1f);
+            float ZPos = Noise * HeightScale;
+            Vertices.Add(FVector(XPos, YPos, ZPos));
+            UVs.Add(FVector2D((float)x / SizeX, (float)y / SizeY));
+        }
     }
 
+    // Create triangles
+    for (int32 y = 0; y < SizeY; y++)
+    {
+        for (int32 x = 0; x < SizeX; x++)
+        {
+            int32 i00 = x + y * (SizeX + 1);
+            int32 i10 = (x + 1) + y * (SizeX + 1);
+            int32 i01 = x + (y + 1) * (SizeX + 1);
+            int32 i11 = (x + 1) + (y + 1) * (SizeX + 1);
+
+            // First triangle
+            Triangles.Append({ i00, i11, i10 });
+            // Second triangle
+            Triangles.Append({ i00, i01, i11 });
+        }
+    }
+
+    // Let Unreal compute normals/tangents
+    Mesh->CreateMeshSection(0, Vertices, Triangles, {}, UVs, {}, {}, true);
 }

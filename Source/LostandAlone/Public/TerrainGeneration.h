@@ -17,9 +17,8 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-    UPROPERTY(VisibleAnywhere, Category = "Landscape");
-    class UProceduralMeshComponent* Mesh;
+	UPROPERTY(VisibleAnywhere)
+	UProceduralMeshComponent* Mesh;
 
-	void GenerateTerrain();
-
+	void GenerateTerrain(int32 SizeX, int32 SizeY, float Scale, float HeightScale);
 };
