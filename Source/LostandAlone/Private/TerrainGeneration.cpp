@@ -5,7 +5,7 @@ ATerrainGeneration::ATerrainGeneration()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-    UProceduralMeshComponent* Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
+    Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
     RootComponent = Mesh;
 
 }
