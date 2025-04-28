@@ -9,13 +9,16 @@ class LOSTANDALONE_API ATerrainGeneration : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
 	ATerrainGeneration();
 
 protected:
 	virtual void BeginPlay() override;
 
-public:	
-	virtual void Tick(float DeltaTime) override;
+private:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Landscape");
+    class UProceduralMeshComponent* Mesh;
+
+	void GenerateTerrain();
 
 };
