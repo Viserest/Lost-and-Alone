@@ -18,7 +18,7 @@ void ATerrainGeneration::BeginPlay()
 	
 }
 
-void GenerateTerrain() {
+void ATerrainGeneration::GenerateTerrain() {
     // vertice components
     TArray<FVector> Vertices;
     TArray<int32> Triangles;
@@ -67,7 +67,7 @@ void GenerateTerrain() {
     ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial'"));
     if (Material.Succeeded())
     {
-        Mesh->SetMaterial(0, Material.Object);
+        Mesh->SetMaterial(1, Material.Object);
     }
 
 }
