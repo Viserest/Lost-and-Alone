@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ProceduralMeshComponent.h"
 #include "TerrainGeneration.generated.h"
 
 UCLASS()
