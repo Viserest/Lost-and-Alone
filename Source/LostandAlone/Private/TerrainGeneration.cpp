@@ -58,6 +58,13 @@ void GenerateTerrain() {
         }
     }
 
+    // Get basic material and add to mesh
+    ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial'"));
+    if (Material.Succeeded())
+    {
+        Mesh->SetMaterial(0, Material.Object);
+    }
+
     // Add section to procedural mesh
     Mesh->CreateMeshSection_LinearColor(
         0, Vertices, Triangles, Normals, UVs, VertexColors, Tangents, true
