@@ -1,5 +1,6 @@
 #include "TerrainGeneration.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "KismetProceduralMeshLibrary.h"
 
 ATerrainGeneration::ATerrainGeneration()
 {
@@ -7,6 +8,12 @@ ATerrainGeneration::ATerrainGeneration()
 
     Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
     RootComponent = Mesh;
+
+    ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial'"));
+    if (Material.Succeeded())
+    {
+        Mesh->SetMaterial(0, Material.Object);
+    }
 
 }
 
@@ -24,7 +31,7 @@ void ATerrainGeneration::GenerateTerrain() {
     TArray<int32> Triangles;
     TArray<FVector> Normals;
     TArray<FVector2D> UVs;
-    TArray<FLinearColor> VertexColors;
+    TArray<FColor> VertexColors;
     TArray<FProcMeshTangent> Tangents;
 
     int32 Width = 100;
@@ -38,7 +45,18 @@ void ATerrainGeneration::GenerateTerrain() {
             // Generate height from perlin noise
             float Height = FMath::PerlinNoise2D(FVector2D(x, y) / Scale) * HeightMultiplier;
             Vertices.Add(FVector(x * 100, y * 100, Height));
+            // upward normals
+            Normals.Add(FVector(0, 0, 1));
+            // add uvs
             UVs.Add(FVector2D((float)x / Width, (float)y / Depth));
+
+            // add random color to landscape
+            /*float Random = FMath::FRand(); // random float 0-1
+            if (Random < 0.5f) {
+                VertexColors.Add(FColor::Green); // 50% chance green (grass)
+            } else {
+                VertexColors.Add(FColor(139, 69, 19)); // brown (dirt)
+            }*/
         }
     }
 
@@ -57,17 +75,19 @@ void ATerrainGeneration::GenerateTerrain() {
             Triangles.Add(Index + Depth + 2);
         }
     }
-
-    // Add section to procedural mesh
-    Mesh->CreateMeshSection_LinearColor(
-        0, Vertices, Triangles, Normals, UVs, VertexColors, Tangents, true
+    
+    // generate normals
+    UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
+        Vertices,
+        Triangles,
+        UVs,
+        Normals,
+        Tangents
     );
 
-    // Get basic material and add to mesh
-    ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial'"));
-    if (Material.Succeeded())
-    {
-        Mesh->SetMaterial(1, Material.Object);
-    }
+    // Add section to procedural mesh
+    Mesh->CreateMeshSection(
+        0, Vertices, Triangles, Normals, UVs, VertexColors, Tangents, true
+    );
 
 }
