@@ -5,7 +5,7 @@ ATerrainGeneration::ATerrainGeneration()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-    Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
+    UProceduralMeshComponent* Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
     RootComponent = Mesh;
 
 }
@@ -62,4 +62,12 @@ void ATerrainGeneration::GenerateTerrain() {
     Mesh->CreateMeshSection_LinearColor(
         0, Vertices, Triangles, Normals, UVs, VertexColors, Tangents, true
     );
+
+    // Get basic material and add to mesh
+    ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial'"));
+    if (Material.Succeeded())
+    {
+        Mesh->SetMaterial(1, Material.Object);
+    }
+
 }
