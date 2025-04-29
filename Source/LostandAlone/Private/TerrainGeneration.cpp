@@ -13,10 +13,16 @@ ATerrainGeneration::ATerrainGeneration()
         TerrainMaterial = Material.Object;
     }
 
-    static ConstructorHelpers::FObjectFinder<UBlueprint> TreeBlueprint(TEXT("Blueprint'/Game/Meshes/Tree.Tree'"));
+    static ConstructorHelpers::FObjectFinder<UBlueprint> TreeBlueprint(TEXT("Blueprint'/Game/Meshes/BP_Tree.BP_Tree'"));
     if (TreeBlueprint.Succeeded())
     {
         TreeBlueprintClass = (UClass*)TreeBlueprint.Object->GeneratedClass;
+    }
+
+    static ConstructorHelpers::FObjectFinder<UBlueprint> BuildingBlueprint(TEXT("Blueprint'/Game/Meshes/BP_Building.BP_Building'"));
+    if (BuildingBlueprint.Succeeded())
+    {
+        BuildingBPClass = (UClass*)BuildingBlueprint.Object->GeneratedClass;
     }
 }
 
@@ -25,7 +31,10 @@ void ATerrainGeneration::BeginPlay()
 	Super::BeginPlay();
 
     int32 Random = FMath::RandRange(0, 10000);
-    Seed = FVector2D(Random, Random);
+    TerrainSeed = FVector2D(Random, Random);
+
+    Random = FMath::RandRange(0, 10000);
+    SpawnSeed = FVector2D(Random, Random);
 
     GenerateTerrain(400, 400);
 }
@@ -40,32 +49,53 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
 
     float Scale = 90.0f;
     float HeightScale = 20.0f;
-    float HeightMultiplier = 120.0f;
+    float PerlinMultiplier = 120.0f;
 
     // Create grid of vertices
     for (int32 y = 0; y <= SizeY; y++)
     {
         for (int32 x = 0; x <= SizeX; x++)
         {
-            float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / HeightMultiplier + Seed);
+            float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + TerrainSeed);
             float XPos = x * Scale;
             float YPos = y * Scale;
-            float ZPos = Noise * HeightScale * HeightMultiplier;
+            float ZPos = Noise * HeightScale * PerlinMultiplier;
             FVector Location = FVector(XPos, YPos, ZPos);
             Vertices.Add(Location);
             UVs.Add(FVector2D((float)x / SizeX, (float)y / SizeY));
 
             // Color of ground based on height
+            float BiomeNoise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + SpawnSeed);
+
             if (ZPos < -400.0f) {
                 VertexColors.Add(FColor(0, 0, 50));
             }
             else {
                 VertexColors.Add(FColor(0, 4, 0));
 
-                // if tree should spawn (1% chance to spawn)
-                float TreeChance = FMath::FRand();
-                if (TreeChance < 0.01f) {
-                    GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, Location, FRotator(0, 0, 0));
+                float AddChance = FMath::FRand();
+
+                // if tree should spawn
+                // Noise between (-1, 0.6]
+                if (BiomeNoise > -1.0f && BiomeNoise <= 0.4f)
+                {
+                    // 1% chance of spawning
+                    if (AddChance < 0.01f)
+                    {
+                        GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, Location, FRotator(0, 0, 0));
+                    }
+                }
+                // if building should spawn
+                // Noise between [0.8, 1)
+                else if (BiomeNoise < 1.0f && BiomeNoise >= 0.6f)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Building could spawned in"));
+                    // 10% chance of spawning
+                    if (AddChance < 0.05f)
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("Building spawned"));
+                        GetWorld()->SpawnActor<AActor>(BuildingBPClass, Location, FRotator(0, 0, 0));
+                    }
                 }
             }
         }

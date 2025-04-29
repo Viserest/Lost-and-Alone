@@ -18,7 +18,10 @@ protected:
 
 private:
 	UPROPERTY()
-	FVector2D Seed = FVector2D::ZeroVector;
+	FVector2D TerrainSeed = FVector2D::ZeroVector;
+
+	UPROPERTY()
+	FVector2D SpawnSeed = FVector2D::ZeroVector;
 
 	UPROPERTY(VisibleAnywhere)
 	UProceduralMeshComponent* Mesh = nullptr;
@@ -28,6 +31,9 @@ private:
 
 	UPROPERTY()
 	UClass* TreeBlueprintClass = nullptr;
+
+	UPROPERTY()
+	UClass* BuildingBPClass = nullptr;
 
 	void GenerateTerrain(int32 SizeX, int32 SizeY);
 };
