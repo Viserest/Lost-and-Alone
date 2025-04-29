@@ -4,35 +4,70 @@
 ATerrainGeneration::ATerrainGeneration()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
     Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
     RootComponent = Mesh;
+
+    ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Material/M_TerrainColor.M_TerrainColor'"));
+    if (Material.Succeeded()) {
+        TerrainMaterial = Material.Object;
+    }
+
+    static ConstructorHelpers::FObjectFinder<UBlueprint> TreeBlueprint(TEXT("Blueprint'/Game/Meshes/Tree.Tree'"));
+    if (TreeBlueprint.Succeeded())
+    {
+        TreeBlueprintClass = (UClass*)TreeBlueprint.Object->GeneratedClass;
+    }
 }
 
 void ATerrainGeneration::BeginPlay()
 {
 	Super::BeginPlay();
-    GenerateTerrain(128, 128, 100.0f, 50.0f);
+
+    int32 Random = FMath::RandRange(0, 10000);
+    Seed = FVector2D(Random, Random);
+
+    GenerateTerrain(400, 400);
 }
 
-void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY, float Scale, float HeightScale)
+void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
 {
     TArray<FVector> Vertices;
     TArray<int32> Triangles;
     TArray<FVector> Normals;
     TArray<FVector2D> UVs;
-    TArray<FProcMeshTangent> Tangents;
+    TArray<FColor> VertexColors;
+
+    float Scale = 90.0f;
+    float HeightScale = 20.0f;
+    float HeightMultiplier = 120.0f;
 
     // Create grid of vertices
     for (int32 y = 0; y <= SizeY; y++)
     {
         for (int32 x = 0; x <= SizeX; x++)
         {
+            float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / HeightMultiplier + Seed);
             float XPos = x * Scale;
             float YPos = y * Scale;
-            float Noise = FMath::PerlinNoise2D(FVector2D(x, y) * 0.1f);
-            float ZPos = Noise * HeightScale;
-            Vertices.Add(FVector(XPos, YPos, ZPos));
+            float ZPos = Noise * HeightScale * HeightMultiplier;
+            FVector Location = FVector(XPos, YPos, ZPos);
+            Vertices.Add(Location);
             UVs.Add(FVector2D((float)x / SizeX, (float)y / SizeY));
+
+            // Color of ground based on height
+            if (ZPos < -400.0f) {
+                VertexColors.Add(FColor(0, 0, 50));
+            }
+            else {
+                VertexColors.Add(FColor(0, 4, 0));
+
+                // if tree should spawn (1% chance to spawn)
+                float TreeChance = FMath::FRand();
+                if (TreeChance < 0.01f) {
+                    GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, Location, FRotator(0, 0, 0));
+                }
+            }
         }
     }
 
@@ -54,5 +89,10 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY, float Scale, 
     }
 
     // Let Unreal compute normals/tangents
-    Mesh->CreateMeshSection(0, Vertices, Triangles, {}, UVs, {}, {}, true);
+    Mesh->CreateMeshSection(0, Vertices, Triangles, {}, UVs, VertexColors, {}, true);
+
+    if (TerrainMaterial)
+    {
+        Mesh->SetMaterial(0, TerrainMaterial);
+    }
 }

@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 #include "LAPlayer.generated.h"
 
 UCLASS()
@@ -12,6 +14,13 @@ class LOSTANDALONE_API ALAPlayer : public ACharacter
 public:
 	
 	ALAPlayer();
+
+private:
+	UPROPERTY()
+	UAudioComponent* AudioComponent = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* SplashSound = nullptr;
 
 protected:
 	

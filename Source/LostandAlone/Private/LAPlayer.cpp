@@ -3,6 +3,8 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Actor.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 
 ALAPlayer::ALAPlayer()
 {
@@ -20,6 +22,17 @@ ALAPlayer::ALAPlayer()
 	FPSCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
 	// Allow the camera to rotate based on the controller input
 	FPSCameraComponent->bUsePawnControlRotation = true;
+
+	// Play audio which is attached to player
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+
+	// Get Splashing sound effect
+	ConstructorHelpers::FObjectFinder<USoundBase> SoundAsset(TEXT("SoundWave'/Game/Audio/water_sound.water_sound'"));
+	if (SoundAsset.Succeeded())
+	{
+		SplashSound = SoundAsset.Object;
+	}
 }
 
 void ALAPlayer::BeginPlay()
@@ -61,6 +74,21 @@ void ALAPlayer::MoveForward(float Value)
 
 		// Calculate the forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		// If Player is in water
+		FVector PlayerLocation = GetActorLocation();
+		if (PlayerLocation.Z < -380.0f) {
+			Value *= 0.5;
+
+			if (!AudioComponent->IsPlaying()) {
+				AudioComponent->SetSound(SplashSound);
+				AudioComponent->Play();
+			}
+		}
+		else if (AudioComponent->IsPlaying()) {
+			AudioComponent->Stop();
+		}
+
 		AddMovementInput(Direction, Value);
 	}
 }
@@ -75,6 +103,21 @@ void ALAPlayer::MoveRight(float Value)
 
 		// Calculate the right vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// If Player is in water
+		FVector PlayerLocation = GetActorLocation();
+		if (PlayerLocation.Z < -380.0f) {
+			Value *= 0.5;
+
+			if (!AudioComponent->IsPlaying()) {
+				AudioComponent->SetSound(SplashSound);
+				AudioComponent->Play();
+			}
+		}
+		else if (AudioComponent->IsPlaying()) {
+			AudioComponent->Stop();
+		}
+
 		AddMovementInput(Direction, Value);
 	}
 }

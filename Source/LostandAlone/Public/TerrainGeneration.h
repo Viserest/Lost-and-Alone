@@ -17,8 +17,17 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(VisibleAnywhere)
-	UProceduralMeshComponent* Mesh;
+	UPROPERTY()
+	FVector2D Seed = FVector2D::ZeroVector;
 
-	void GenerateTerrain(int32 SizeX, int32 SizeY, float Scale, float HeightScale);
+	UPROPERTY(VisibleAnywhere)
+	UProceduralMeshComponent* Mesh = nullptr;
+
+	UPROPERTY()
+	UMaterial* TerrainMaterial = nullptr;
+
+	UPROPERTY()
+	UClass* TreeBlueprintClass = nullptr;
+
+	void GenerateTerrain(int32 SizeX, int32 SizeY);
 };
