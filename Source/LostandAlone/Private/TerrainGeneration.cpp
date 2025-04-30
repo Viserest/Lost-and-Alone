@@ -24,6 +24,18 @@ ATerrainGeneration::ATerrainGeneration()
     {
         BuildingBPClass = (UClass*)BuildingBlueprint.Object->GeneratedClass;
     }
+
+    static ConstructorHelpers::FObjectFinder<UBlueprint> CarePackageBlueprint(TEXT("Blueprint'/Game/Meshes/BP_CarePackage.BP_CarePackage'"));
+    if (CarePackageBlueprint.Succeeded())
+    {
+        CarePackageBPClass = (UClass*)CarePackageBlueprint.Object->GeneratedClass;
+    }
+
+    static ConstructorHelpers::FObjectFinder<UBlueprint> BolderBlueprint(TEXT("Blueprint'/Game/Meshes/BP_Rock.BP_Rock'"));
+    if (BolderBlueprint.Succeeded())
+    {
+        BolderBPClass = (UClass*)BolderBlueprint.Object->GeneratedClass;
+    }
 }
 
 void ATerrainGeneration::BeginPlay()
@@ -36,11 +48,16 @@ void ATerrainGeneration::BeginPlay()
     Random = FMath::RandRange(0, 10000);
     SpawnSeed = FVector2D(Random, Random);
 
-    GenerateTerrain(400, 400);
+    GenerateTerrain(1000, 1000);
 }
 
 void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
 {
+    int32 TreeCount = 0;
+    int32 BuildingCount = 0;
+    int32 PackageCount = 0;
+    int32 RockCount = 0;
+
     TArray<FVector> Vertices;
     TArray<int32> Triangles;
     TArray<FVector> Normals;
@@ -51,9 +68,15 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
     float HeightScale = 20.0f;
     float PerlinMultiplier = 120.0f;
 
+    // Move actor so 0,0 is middle of generated terrain
+    SetActorLocation(FVector(-(SizeX / 2) * Scale, -(SizeY / 2) * Scale, 0));
+
     // Create grid of vertices
     for (int32 y = 0; y <= SizeY; y++)
     {
+        int32 BuildingX = FMath::RandRange(0, SizeY);
+        int32 CarePackageX = FMath::RandRange(0, SizeY);
+        int32 BolderX = FMath::RandRange(0, SizeY);
         for (int32 x = 0; x <= SizeX; x++)
         {
             float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + TerrainSeed);
@@ -61,11 +84,9 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
             float YPos = y * Scale;
             float ZPos = Noise * HeightScale * PerlinMultiplier;
             FVector Location = FVector(XPos, YPos, ZPos);
+            FVector ActorLocation = FVector(XPos, YPos, ZPos) + GetActorLocation();
             Vertices.Add(Location);
             UVs.Add(FVector2D((float)x / SizeX, (float)y / SizeY));
-
-            // Color of ground based on height
-            float BiomeNoise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + SpawnSeed);
 
             if (ZPos < -400.0f) {
                 VertexColors.Add(FColor(0, 0, 50));
@@ -75,26 +96,43 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
 
                 float AddChance = FMath::FRand();
 
-                // if tree should spawn
-                // Noise between (-1, 0.6]
-                if (BiomeNoise > -1.0f && BiomeNoise <= 0.4f)
+                // If current x equals the possible BuildingX
+                if (x == BuildingX)
                 {
-                    // 1% chance of spawning
-                    if (AddChance < 0.01f)
-                    {
-                        GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, Location, FRotator(0, 0, 0));
-                    }
-                }
-                // if building should spawn
-                // Noise between [0.8, 1)
-                else if (BiomeNoise < 1.0f && BiomeNoise >= 0.6f)
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("Building could spawned in"));
-                    // 10% chance of spawning
+                    // 5% chance of spawning
                     if (AddChance < 0.05f)
                     {
-                        UE_LOG(LogTemp, Warning, TEXT("Building spawned"));
-                        GetWorld()->SpawnActor<AActor>(BuildingBPClass, Location, FRotator(0, 0, 0));
+                        BuildingCount++;
+                        GetWorld()->SpawnActor<AActor>(BuildingBPClass, ActorLocation, FRotator(0, 0, 0));
+                    }
+                }
+                // If current x equals the possible CarePackageX
+                else if (x == CarePackageX)
+                {
+                    // 40% chance of spawning
+                    if (AddChance < 0.2f)
+                    {
+                        PackageCount++;
+                        GetWorld()->SpawnActor<AActor>(CarePackageBPClass, ActorLocation, FRotator(0, 0, 0));
+                    }
+                }
+                // If current x equals the possible BolderX
+                else if (x == BolderX)
+                {
+                    // 40% chance of spawning
+                    if (AddChance < 0.5f)
+                    {
+                        RockCount++;
+                        GetWorld()->SpawnActor<AActor>(BolderBPClass, ActorLocation, FRotator(0, 0, 0));
+                    }
+                }
+                // If nothing else can spawn then maybe place a tree
+                else {
+                    // 0.8% chance of spawning
+                    if (AddChance < 0.008f)
+                    {
+                        TreeCount++;
+                        GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, ActorLocation, FRotator(0, 0, 0));
                     }
                 }
             }
@@ -125,4 +163,8 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
     {
         Mesh->SetMaterial(0, TerrainMaterial);
     }
+
+    // Print the count of everything at end of generation
+    UE_LOG(LogTemp, Warning, TEXT("World Size: %d | Trees: %d | Buildings: %d | Packages: %d | Rocks: %d"),
+        SizeX, TreeCount, BuildingCount, PackageCount, RockCount);
 }
