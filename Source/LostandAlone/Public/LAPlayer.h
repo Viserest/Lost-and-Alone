@@ -2,6 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
+#include "PlayerVitalsComponent.h"
+#include "InventoryComponent.h"
 #include "LAPlayer.generated.h"
 
 UCLASS()
@@ -13,6 +17,22 @@ public:
 	
 	ALAPlayer();
 
+private:
+	UPROPERTY()
+	UAudioComponent* AudioComponent = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* SplashSound = nullptr;
+
+	UPROPERTY()
+	UPlayerVitalsComponent* VitalsComponent = nullptr;
+
+	UPROPERTY()
+	UInventoryComponent* InventoryComponent = nullptr;
+
+	UFUNCTION()
+	void OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor);
+
 protected:
 	
 	virtual void BeginPlay() override;
@@ -20,13 +40,15 @@ protected:
 public:	
 	
 	virtual void Tick(float DeltaTime) override;
-
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Movement functions
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
+	// Jump function
+	void MoveUp(float Value);
 
 	// Look functions based on input rates
 	void TurnAtRate(float Rate);

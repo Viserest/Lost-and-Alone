@@ -3,6 +3,12 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Actor.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "PlayerVitalsComponent.h"
+#include "InventoryComponent.h"
+#include "CarePackageBase.h"
 
 ALAPlayer::ALAPlayer()
 {
@@ -20,17 +26,49 @@ ALAPlayer::ALAPlayer()
 	FPSCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
 	// Allow the camera to rotate based on the controller input
 	FPSCameraComponent->bUsePawnControlRotation = true;
+
+	// Play audio which is attached to player
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+
+	// Get Splashing sound effect
+	ConstructorHelpers::FObjectFinder<USoundBase> SoundAsset(TEXT("SoundWave'/Game/Audio/water_sound.water_sound'"));
+	if (SoundAsset.Succeeded())
+	{
+		SplashSound = SoundAsset.Object;
+	}
+
+	// Player vitals for health, hunger, thirst, drousiness, energy, fear
+	VitalsComponent = CreateDefaultSubobject<UPlayerVitalsComponent>(TEXT("VitalsComponent"));
+
+	// Player inventory
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void ALAPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// When player hits object run this function
+	OnActorBeginOverlap.AddDynamic(this, &ALAPlayer::OnOverlapBegin);
+
+	// Allow flying
+	//GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	
 }
 
 void ALAPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	FString StatsText = FString::Printf(TEXT("Health: %.0f | Hunger: %.0f | Thirst: %.0f | Energy: %.0f"),
+		VitalsComponent->Health,
+		VitalsComponent->Hunger,
+		VitalsComponent->Thirst,
+		VitalsComponent->Energy
+	);
+
+	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Green, StatsText);
 
 }
 
@@ -41,6 +79,9 @@ void ALAPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &ALAPlayer::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ALAPlayer::MoveRight);
+
+	// Bind movement jump
+	PlayerInputComponent->BindAxis("MoveUp", this, &ALAPlayer::MoveUp);
 
 	// Bind mouse look events (direct input)
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
@@ -61,6 +102,21 @@ void ALAPlayer::MoveForward(float Value)
 
 		// Calculate the forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		// If Player is in water
+		FVector PlayerLocation = GetActorLocation();
+		if (PlayerLocation.Z < -380.0f) {
+			Value *= 0.5;
+
+			if (!AudioComponent->IsPlaying()) {
+				AudioComponent->SetSound(SplashSound);
+				AudioComponent->Play();
+			}
+		}
+		else if (AudioComponent->IsPlaying()) {
+			AudioComponent->Stop();
+		}
+
 		AddMovementInput(Direction, Value);
 	}
 }
@@ -75,7 +131,31 @@ void ALAPlayer::MoveRight(float Value)
 
 		// Calculate the right vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// If Player is in water
+		FVector PlayerLocation = GetActorLocation();
+		if (PlayerLocation.Z < -380.0f) {
+			Value *= 0.5;
+
+			if (!AudioComponent->IsPlaying()) {
+				AudioComponent->SetSound(SplashSound);
+				AudioComponent->Play();
+			}
+		}
+		else if (AudioComponent->IsPlaying()) {
+			AudioComponent->Stop();
+		}
+
 		AddMovementInput(Direction, Value);
+	}
+}
+
+void ALAPlayer::MoveUp(float Value)
+{
+	// Begin upward movement
+	if (Value != 0.0f)
+	{
+		AddMovementInput(FVector(0, 0, 1), Value);
 	}
 }
 
@@ -91,3 +171,19 @@ void ALAPlayer::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+void ALAPlayer::OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor)
+{
+	if (OtherActor && OtherActor->ActorHasTag("CarePackage"))
+	{
+		ACarePackageBase* CarePackage = Cast<ACarePackageBase>(OtherActor);
+		if (CarePackage && CarePackage->ContainsItem)
+		{
+			int32 Code = CarePackage->ItemCode;
+			int32 Count = CarePackage->ItemCount;
+
+			CarePackage->ContainsItem = false;
+
+			UE_LOG(LogTemp, Warning, TEXT("Care Package -> Code: %d, Count: %d"), Code, Count);
+		}
+	}
+}
