@@ -14,6 +14,8 @@ UPlayerVitalsComponent::UPlayerVitalsComponent()
 	Hunger = MaxOfVital;
 	Thirst = MaxOfVital;
 	Energy = MaxOfVital;
+	Comfort = MaxOfVital;
+	Focus = MaxOfVital;
 }
 
 void UPlayerVitalsComponent::BeginPlay()
@@ -33,14 +35,27 @@ void UPlayerVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Hunger = FMath::Clamp(Hunger - 2.0f * DeltaTime, 0, MaxOfVital); // 250 seconds (4m10s) until pain
 	Thirst = FMath::Clamp(Thirst - 3.0f * DeltaTime, 0, MaxOfVital); // 167 seconds (2m47s) until pain
 	Energy = FMath::Clamp(Energy - 1.0f * DeltaTime, 0, MaxOfVital); // 500 seconds (8m20s) until pain
+    Comfort = FMath::Clamp(Energy - 1.0f * DeltaTime, 0, MaxOfVital);
+    Focus = FMath::Clamp(Energy - 1.0f * DeltaTime, 0, MaxOfVital);
 
+    /*
+    Negative effects
+    */
 	// If hunger and thirst is completely empty
 	if (Hunger <= 0.0f || Thirst <= 0.0f)
 	{
 		Health = FMath::Clamp(Health - 10.0f * DeltaTime, 0, MaxOfVital); // 50 seconds until death
 	}
+    // If your too comfortable then your focus will go down
+    if (Comfort >= MaxOfVital * 0.8f)
+    {
+        Focus = FMath::Clamp(Focus - 3.0f * DeltaTime, 0, MaxOfVital);
+    }
+    /*
+    Positive effects
+    */
 	// If hunger and thirst is 80% full
-	else if (Hunger >= MaxOfVital * 0.8f && Thirst >= MaxOfVital * 0.8f)
+	if (Hunger >= MaxOfVital * 0.8f && Thirst >= MaxOfVital * 0.8f)
 	{
 		Health = FMath::Clamp(Health + 3.0f * DeltaTime, 0, MaxOfVital); // Add health until full
 	}
