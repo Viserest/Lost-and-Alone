@@ -13,7 +13,7 @@ AProceduralNightLighting::AProceduralNightLighting()
     MoonLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("MoonLight"));
     MoonLight->SetupAttachment(RootComponent);
     MoonLight->SetMobility(EComponentMobility::Movable);
-    MoonLight->Intensity = 50.0f;
+    MoonLight->Intensity = 30.0f;
     MoonLight->LightColor = FColor(180, 200, 255);
     MoonLight->SetCastShadows(true);
     MoonLight->ShadowBias = 0.5f;
