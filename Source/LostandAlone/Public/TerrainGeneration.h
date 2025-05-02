@@ -21,7 +21,7 @@ private:
 	FVector2D TerrainSeed = FVector2D::ZeroVector;
 
 	UPROPERTY()
-	FVector2D SpawnSeed = FVector2D::ZeroVector;
+	FVector2D BiomeSeed = FVector2D::ZeroVector;
 
 	UPROPERTY(VisibleAnywhere)
 	UProceduralMeshComponent* Mesh = nullptr;
@@ -31,6 +31,12 @@ private:
 
 	UPROPERTY()
 	UClass* TreeBlueprintClass = nullptr;
+
+	UPROPERTY()
+	UClass* TreeDeadBPClass = nullptr;
+
+	UPROPERTY()
+	UClass* TreeSpruceBPClass = nullptr;
 
 	UPROPERTY()
 	UClass* BuildingBPClass = nullptr;

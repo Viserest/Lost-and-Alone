@@ -19,6 +19,18 @@ ATerrainGeneration::ATerrainGeneration()
         TreeBlueprintClass = (UClass*)TreeBlueprint.Object->GeneratedClass;
     }
 
+    static ConstructorHelpers::FObjectFinder<UBlueprint> TreeDeadBP(TEXT("Blueprint'/Game/Meshes/BP_TreeDead.BP_TreeDead'"));
+    if (TreeDeadBP.Succeeded())
+    {
+        TreeDeadBPClass = (UClass*)TreeDeadBP.Object->GeneratedClass;
+    }
+
+    static ConstructorHelpers::FObjectFinder<UBlueprint> TreeSpruceBP(TEXT("Blueprint'/Game/Meshes/BP_TreeSpruce.BP_TreeSpruce'"));
+    if (TreeSpruceBP.Succeeded())
+    {
+        TreeSpruceBPClass = (UClass*)TreeSpruceBP.Object->GeneratedClass;
+    }
+
     static ConstructorHelpers::FObjectFinder<UBlueprint> BuildingBlueprint(TEXT("Blueprint'/Game/Meshes/BP_Building.BP_Building'"));
     if (BuildingBlueprint.Succeeded())
     {
@@ -46,7 +58,7 @@ void ATerrainGeneration::BeginPlay()
     TerrainSeed = FVector2D(Random, Random);
 
     Random = FMath::RandRange(0, 10000);
-    SpawnSeed = FVector2D(Random, Random);
+    BiomeSeed = FVector2D(Random, Random);
 
     GenerateTerrain(1000, 1000);
 }
@@ -132,7 +144,22 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
                     if (AddChance < 0.008f)
                     {
                         TreeCount++;
-                        GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, ActorLocation, FRotator(0, 0, 0));
+                        float BiomeNoise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + BiomeSeed);
+                        // From (-1 to -0.3)
+                        if (BiomeNoise < -0.3f)
+                        {
+                            GetWorld()->SpawnActor<AActor>(TreeDeadBPClass, ActorLocation, FRotator(0, 0, 0));
+                        }
+                        // From [-0.3 to 0.3]
+                        else if (BiomeNoise >= -0.3f && BiomeNoise <= 0.3f)
+                        {
+                            GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, ActorLocation, FRotator(0, 0, 0));
+                        }
+                        // From (0.3 to 1)
+                        else if (BiomeNoise > 0.3f)
+                        {
+                            GetWorld()->SpawnActor<AActor>(TreeSpruceBPClass, ActorLocation, FRotator(0, 0, 0));
+                        }
                     }
                 }
             }
