@@ -20,5 +20,10 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	void AddItem(FString Name, int32 Count);
+	TMap<FString, int32> GetItems();
+
+private:
+	UPROPERTY()
+	TMap<FString, int32> Items;
 };

@@ -60,13 +60,18 @@ void ALAPlayer::BeginPlay()
 void ALAPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	FString StatsText = FString::Printf(TEXT("Health: %.0f | Hunger: %.0f | Thirst: %.0f | Energy: %.0f"),
+	
+	FString StatsText = FString::Printf(TEXT("Health: %.0f | Hunger: %.0f | Thirst: %.0f | Energy: %.0f\nItems: "),
 		VitalsComponent->Health,
 		VitalsComponent->Hunger,
 		VitalsComponent->Thirst,
 		VitalsComponent->Energy
 	);
+
+	for (const TPair<FString, int32>& Pair : InventoryComponent->GetItems())
+	{
+		StatsText += FString::Printf(TEXT("%s: %d | "), *Pair.Key, Pair.Value);
+	}
 
 	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Green, StatsText);
 
@@ -178,12 +183,18 @@ void ALAPlayer::OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor)
 		ACarePackageBase* CarePackage = Cast<ACarePackageBase>(OtherActor);
 		if (CarePackage && CarePackage->ContainsItem)
 		{
-			int32 Code = CarePackage->ItemCode;
-			int32 Count = CarePackage->ItemCount;
-
+			// Remove ability to open again
 			CarePackage->ContainsItem = false;
 
-			UE_LOG(LogTemp, Warning, TEXT("Care Package -> Code: %d, Count: %d"), Code, Count);
+			// Get item and its quantity
+			FString Name = CarePackage->ItemName;
+			int32 Count = CarePackage->ItemCount;
+
+			// Add to inventory
+			InventoryComponent->AddItem(Name, Count);
+
+			// Log item
+			UE_LOG(LogTemp, Warning, TEXT("Care Package -> Name: %s, Count: %d"), *Name, Count);
 		}
 	}
 }

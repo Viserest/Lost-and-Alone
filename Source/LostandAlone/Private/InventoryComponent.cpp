@@ -3,7 +3,7 @@
 
 UInventoryComponent::UInventoryComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 }
 
@@ -19,3 +19,20 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 }
 
+void UInventoryComponent::AddItem(FString Name, int32 Count)
+{
+	// If inventory already contains item then add to it
+	if (int32* index = Items.Find(Name))
+	{
+		*index += Count;
+	}
+	// Add item to inventory with its count
+	else {
+		Items.Add(Name, Count);
+	}
+}
+
+TMap<FString, int32> UInventoryComponent::GetItems()
+{
+	return Items;
+}

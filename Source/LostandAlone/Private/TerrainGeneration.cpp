@@ -91,16 +91,25 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
         int32 BolderX = FMath::RandRange(0, SizeY);
         for (int32 x = 0; x <= SizeX; x++)
         {
-            float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + TerrainSeed);
             float XPos = x * Scale;
             float YPos = y * Scale;
-            float ZPos = Noise * HeightScale * PerlinMultiplier;
+            float ZPos;
+            if (x == 0 || y == 0 || x == SizeX || y == SizeY) {
+                ZPos = 1000.0f;
+            }
+            else {
+                float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + TerrainSeed);
+                ZPos = Noise * HeightScale * PerlinMultiplier;
+            }
             FVector Location = FVector(XPos, YPos, ZPos);
             FVector ActorLocation = FVector(XPos, YPos, ZPos) + GetActorLocation();
             Vertices.Add(Location);
             UVs.Add(FVector2D((float)x / SizeX, (float)y / SizeY));
 
-            if (ZPos < -400.0f) {
+            if (ZPos == 1000.0f) {
+                VertexColors.Add(FColor::White);
+            }
+            else if (ZPos < -400.0f) {
                 VertexColors.Add(FColor(0, 0, 50));
             }
             else {

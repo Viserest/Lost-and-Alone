@@ -24,7 +24,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY()
-	int32 ItemCode;
+	FString ItemName;
 
 	UPROPERTY()
 	int32 ItemCount;
