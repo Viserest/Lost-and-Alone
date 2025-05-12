@@ -209,7 +209,16 @@ void ALAPlayer::LookUpAtRate(float Rate)
 void ALAPlayer::Interact()
 {
 	FString ItemName = InventoryComponent->GetSelected();
-	if (ItemName == "Whistle")
+	if (ItemName == "Wasp Nest" || ItemName == "Snake" || ItemName == "Rotten Apple")
+	{
+		VitalsComponent->TakeDamage(100);
+	}
+	else if (ItemName == "Blueberry" || ItemName == "Redberry" || ItemName == "Greenberry" || ItemName == "Yellowberry" || ItemName == "Apple" ||
+		ItemName == "Trail Mix" || ItemName == "Lunchly" || ItemName == "Deer Jerky" || ItemName == "Honeycomb")
+	{
+		VitalsComponent->Eat(40);
+	}
+	else if (ItemName == "Whistle")
 	{
 		// Dont worry if a different sound is playing
 		AudioComponent->SetSound(WhistleSound);

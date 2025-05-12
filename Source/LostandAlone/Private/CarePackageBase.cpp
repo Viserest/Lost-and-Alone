@@ -38,7 +38,7 @@ void ACarePackageBase::BeginPlay()
 	case 12: ItemName = "Greenberry"; break;
 	case 13: ItemName = "Yellowberry"; break;
 	case 14: ItemName = "Apple"; break;
-	case 15: ItemName = "Rotten Apple"; break;
+	case 15: ItemName = "Rotten Apple"; break; // Hurts
 	case 16: ItemName = "Trail Mix"; break;
 	case 17: ItemName = "Lunchly"; break;
 	case 18: ItemName = "Deer Jerky"; break;
@@ -47,8 +47,8 @@ void ACarePackageBase::BeginPlay()
 	case 20: ItemName = "Flashlight"; break;
 	case 21: ItemName = "Knife"; break;
 	case 22: ItemName = "Spear"; break;
-	case 23: ItemName = "Whistle"; break;
-	case 24: ItemName = "Bow"; break;
+	case 23: ItemName = "Bow"; break;
+	case 24: ItemName = "Whistle"; break;
 	case 25: ItemName = "Horn"; break;
 	}
 
