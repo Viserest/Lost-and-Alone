@@ -5,6 +5,17 @@
 #include "Components/ActorComponent.h"
 #include "InventoryComponent.generated.h"
 
+USTRUCT()
+struct FItem {
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString Name;
+
+	UPROPERTY()
+	int32 Count;
+};
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class LOSTANDALONE_API UInventoryComponent : public UActorComponent
@@ -21,9 +32,13 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void AddItem(FString Name, int32 Count);
-	TMap<FString, int32> GetItems();
+	TArray<FItem> GetItems();
+	FString GetSelected();
+
+	float SelectedItem = 0;
 
 private:
+
 	UPROPERTY()
-	TMap<FString, int32> Items;
+	TArray<FItem> Items;
 };

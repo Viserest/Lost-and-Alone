@@ -32,10 +32,24 @@ ALAPlayer::ALAPlayer()
 	AudioComponent->SetupAttachment(RootComponent);
 
 	// Get Splashing sound effect
-	ConstructorHelpers::FObjectFinder<USoundBase> SoundAsset(TEXT("SoundWave'/Game/Audio/water_sound.water_sound'"));
-	if (SoundAsset.Succeeded())
+	ConstructorHelpers::FObjectFinder<USoundBase> SoundAsset1(TEXT("SoundWave'/Game/Audio/water_sound.water_sound'"));
+	if (SoundAsset1.Succeeded())
 	{
-		SplashSound = SoundAsset.Object;
+		SplashSound = SoundAsset1.Object;
+	}
+
+	// Get Whistle sound effect
+	ConstructorHelpers::FObjectFinder<USoundBase> SoundAsset2(TEXT("SoundWave'/Game/Audio/whistle_sound.whistle_sound'"));
+	if (SoundAsset2.Succeeded())
+	{
+		WhistleSound = SoundAsset2.Object;
+	}
+
+	// Get Whistle sound effect
+	ConstructorHelpers::FObjectFinder<USoundBase> SoundAsset3(TEXT("SoundWave'/Game/Audio/horn_sound.horn_sound'"));
+	if (SoundAsset3.Succeeded())
+	{
+		HornSound = SoundAsset3.Object;
 	}
 
 	// Player vitals for health, hunger, thirst, drousiness, energy, fear
@@ -51,6 +65,8 @@ void ALAPlayer::BeginPlay()
 
 	// When player hits object run this function
 	OnActorBeginOverlap.AddDynamic(this, &ALAPlayer::OnOverlapBegin);
+
+	InventoryComponent->AddItem("Whistle", 1);
 
 	// Allow flying
 	//GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -68,9 +84,9 @@ void ALAPlayer::Tick(float DeltaTime)
 		VitalsComponent->Energy
 	);
 
-	for (const TPair<FString, int32>& Pair : InventoryComponent->GetItems())
+	for (const FItem& Pair : InventoryComponent->GetItems())
 	{
-		StatsText += FString::Printf(TEXT("%s: %d | "), *Pair.Key, Pair.Value);
+		StatsText += FString::Printf(TEXT("%s: %d | "), *Pair.Name, Pair.Count);
 	}
 
 	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Green, StatsText);
@@ -95,6 +111,10 @@ void ALAPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	// Optionally, bind rate-based input for consistent rotation speed
 	PlayerInputComponent->BindAxis("TurnRate", this, &ALAPlayer::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ALAPlayer::LookUpAtRate);
+
+	// Interact with the inventory; left click
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ALAPlayer::Interact);
+	PlayerInputComponent->BindAxis("ScrollInventory", this, &ALAPlayer::ScrollInventory);
 }
 
 void ALAPlayer::MoveForward(float Value)
@@ -174,6 +194,28 @@ void ALAPlayer::LookUpAtRate(float Rate)
 {
 	// Calculate delta for this frame from the rate information and apply pitch input
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ALAPlayer::Interact()
+{
+	FString ItemName = InventoryComponent->GetSelected();
+	if (ItemName == "Whistle")
+	{
+		// Dont worry if a different sound is playing
+		AudioComponent->SetSound(WhistleSound);
+		AudioComponent->Play();
+	}
+	else if (ItemName == "Horn")
+	{
+		// Dont worry if a different sound is playing
+		AudioComponent->SetSound(HornSound);
+		AudioComponent->Play();
+	}
+}
+
+void ALAPlayer::ScrollInventory(float Value)
+{
+	InventoryComponent->SelectedItem += Value;
 }
 
 void ALAPlayer::OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor)

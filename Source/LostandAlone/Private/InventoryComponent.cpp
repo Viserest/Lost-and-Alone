@@ -19,20 +19,37 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 }
 
+struct Item {
+	FString Name;
+	int32 Count;
+};
+
 void UInventoryComponent::AddItem(FString Name, int32 Count)
 {
-	// If inventory already contains item then add to it
-	if (int32* index = Items.Find(Name))
+	bool bFound = false;
+	for (FItem& CurrentItem : Items)
 	{
-		*index += Count;
+		// If inventory already contains item then add to it
+		if (CurrentItem.Name == Name)
+		{
+			CurrentItem.Count += Count;
+			bFound = true;
+			break;
+		}
 	}
 	// Add item to inventory with its count
-	else {
-		Items.Add(Name, Count);
+	if (!bFound)
+	{
+		Items.Add(FItem(Name, Count));
 	}
 }
 
-TMap<FString, int32> UInventoryComponent::GetItems()
+TArray<FItem> UInventoryComponent::GetItems()
 {
 	return Items;
+}
+
+FString UInventoryComponent::GetSelected()
+{
+	return Items[SelectedItem].Name;
 }

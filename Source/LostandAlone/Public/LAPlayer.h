@@ -24,6 +24,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* SplashSound = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* WhistleSound = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* HornSound = nullptr;
+
 	UPROPERTY()
 	UPlayerVitalsComponent* VitalsComponent = nullptr;
 
@@ -53,6 +59,10 @@ public:
 	// Look functions based on input rates
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
+
+	// Interact
+	void Interact();
+	void ScrollInventory(float Value);
 
 protected:
 
