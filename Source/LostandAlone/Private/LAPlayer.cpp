@@ -67,6 +67,7 @@ void ALAPlayer::BeginPlay()
 	OnActorBeginOverlap.AddDynamic(this, &ALAPlayer::OnOverlapBegin);
 
 	InventoryComponent->AddItem("Whistle", 1);
+	InventoryComponent->AddItem("Horn", 1);
 
 	// Allow flying
 	//GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -238,12 +239,12 @@ void ALAPlayer::Interact()
 void ALAPlayer::ScrollInventory(float Value)
 {
 	int32 NewValue = InventoryComponent->SelectedItem += (int)Value;
-	if (NewValue == -1)
+	if (NewValue < 0)
 	{
 		// Scroll around to other side of inventory
 		InventoryComponent->SelectedItem = InventoryComponent->GetItems().Num() - 1;
 	}
-	else if (NewValue == InventoryComponent->GetItems().Num())
+	else if (NewValue > InventoryComponent->GetItems().Num())
 	{
 		InventoryComponent->SelectedItem = 0;
 	}
