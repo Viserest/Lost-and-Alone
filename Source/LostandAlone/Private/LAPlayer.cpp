@@ -208,15 +208,18 @@ void ALAPlayer::LookUpAtRate(float Rate)
 
 void ALAPlayer::Interact()
 {
-	FString ItemName = InventoryComponent->GetSelected();
+	FItem* Item = InventoryComponent->GetSelected();
+	FString ItemName = Item->Name;
 	if (ItemName == "Wasp Nest" || ItemName == "Snake" || ItemName == "Rotten Apple")
 	{
 		VitalsComponent->TakeDamage(100);
+		Item->Count--;
 	}
 	else if (ItemName == "Blueberry" || ItemName == "Redberry" || ItemName == "Greenberry" || ItemName == "Yellowberry" || ItemName == "Apple" ||
 		ItemName == "Trail Mix" || ItemName == "Lunchly" || ItemName == "Deer Jerky" || ItemName == "Honeycomb")
 	{
 		VitalsComponent->Eat(40);
+		Item->Count--;
 	}
 	else if (ItemName == "Whistle")
 	{
@@ -235,13 +238,14 @@ void ALAPlayer::Interact()
 void ALAPlayer::ScrollInventory(float Value)
 {
 	int32 NewValue = InventoryComponent->SelectedItem += (int)Value;
-	if (NewValue <= 0)
+	if (NewValue == -1)
+	{
+		// Scroll around to other side of inventory
+		InventoryComponent->SelectedItem = InventoryComponent->GetItems().Num() - 1;
+	}
+	else if (NewValue == InventoryComponent->GetItems().Num())
 	{
 		InventoryComponent->SelectedItem = 0;
-	}
-	else if (NewValue >= InventoryComponent->GetItems().Num())
-	{
-		InventoryComponent->SelectedItem = InventoryComponent->GetItems().Num();
 	}
 }
 

@@ -33,7 +33,7 @@ public:
 
 	void AddItem(FString Name, int32 Count);
 	TArray<FItem> GetItems();
-	FString GetSelected();
+	FItem* GetSelected();
 
 	int32 SelectedItem = 0;
 

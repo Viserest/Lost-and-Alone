@@ -19,11 +19,6 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 }
 
-struct Item {
-	FString Name;
-	int32 Count;
-};
-
 void UInventoryComponent::AddItem(FString Name, int32 Count)
 {
 	bool bFound = false;
@@ -49,7 +44,7 @@ TArray<FItem> UInventoryComponent::GetItems()
 	return Items;
 }
 
-FString UInventoryComponent::GetSelected()
+FItem* UInventoryComponent::GetSelected()
 {
-	return Items[SelectedItem].Name;
+	return Items[SelectedItem];
 }
