@@ -84,9 +84,19 @@ void ALAPlayer::Tick(float DeltaTime)
 		VitalsComponent->Energy
 	);
 
+	int32 Index = 0;
 	for (const FItem& Pair : InventoryComponent->GetItems())
 	{
-		StatsText += FString::Printf(TEXT("%s: %d | "), *Pair.Name, Pair.Count);
+		// If current item is selected
+		if (InventoryComponent->SelectedItem == Index)
+		{
+			StatsText += FString::Printf(TEXT("<%s: %d> | "), *Pair.Name, Pair.Count);
+		}
+		else {
+			StatsText += FString::Printf(TEXT("%s: %d | "), *Pair.Name, Pair.Count);
+		}
+
+		Index++;
 	}
 
 	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Green, StatsText);
