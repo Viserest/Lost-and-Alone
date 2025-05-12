@@ -208,18 +208,18 @@ void ALAPlayer::LookUpAtRate(float Rate)
 
 void ALAPlayer::Interact()
 {
-	FItem* Item = InventoryComponent->GetSelected();
-	FString ItemName = Item->Name;
+	FItem& Item = InventoryComponent->GetSelected();
+	FString ItemName = Item.Name;
 	if (ItemName == "Wasp Nest" || ItemName == "Snake" || ItemName == "Rotten Apple")
 	{
 		VitalsComponent->TakeDamage(100);
-		Item->Count--;
+		Item.Count--;
 	}
 	else if (ItemName == "Blueberry" || ItemName == "Redberry" || ItemName == "Greenberry" || ItemName == "Yellowberry" || ItemName == "Apple" ||
 		ItemName == "Trail Mix" || ItemName == "Lunchly" || ItemName == "Deer Jerky" || ItemName == "Honeycomb")
 	{
 		VitalsComponent->Eat(40);
-		Item->Count--;
+		Item.Count--;
 	}
 	else if (ItemName == "Whistle")
 	{

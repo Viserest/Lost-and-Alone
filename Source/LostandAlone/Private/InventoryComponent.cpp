@@ -44,7 +44,7 @@ TArray<FItem> UInventoryComponent::GetItems()
 	return Items;
 }
 
-FItem* UInventoryComponent::GetSelected()
+FItem& UInventoryComponent::GetSelected()
 {
 	return Items[SelectedItem];
 }
