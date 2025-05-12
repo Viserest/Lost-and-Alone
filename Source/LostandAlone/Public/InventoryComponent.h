@@ -35,7 +35,7 @@ public:
 	TArray<FItem> GetItems();
 	FString GetSelected();
 
-	float SelectedItem = 0;
+	int32 SelectedItem = 0;
 
 private:
 

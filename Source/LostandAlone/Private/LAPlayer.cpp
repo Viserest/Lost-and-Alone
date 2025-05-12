@@ -234,7 +234,15 @@ void ALAPlayer::Interact()
 
 void ALAPlayer::ScrollInventory(float Value)
 {
-	InventoryComponent->SelectedItem += Value;
+	int32 NewValue = InventoryComponent->SelectedItem += (int)Value;
+	if (NewValue <= 0)
+	{
+		InventoryComponent->SelectedItem = 0;
+	}
+	else if (NewValue >= InventoryComponent->GetItems().Num())
+	{
+		InventoryComponent->SelectedItem = InventoryComponent->GetItems().Num();
+	}
 }
 
 void ALAPlayer::OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor)
