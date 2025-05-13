@@ -34,20 +34,14 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "Vitals")
     float Health;
-
     UPROPERTY(EditAnywhere, Category = "Vitals")
     float Hunger;
-
     UPROPERTY(EditAnywhere, Category = "Vitals")
     float Thirst;
-
     UPROPERTY(EditAnywhere, Category = "Vitals")
     float Energy;
-
     UPROPERTY(EditAnywhere, Category = "Vitals")
     float Comfort;
-
     UPROPERTY(EditAnywhere, Category = "Vitals")
     float Focus;
-
 };

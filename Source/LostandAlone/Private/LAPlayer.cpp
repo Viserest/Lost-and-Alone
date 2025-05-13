@@ -77,12 +77,19 @@ void ALAPlayer::BeginPlay()
 void ALAPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	FVector Coords = GetActorLocation();
 	
-	FString StatsText = FString::Printf(TEXT("Health: %.0f | Hunger: %.0f | Thirst: %.0f | Energy: %.0f\nItems: "),
+	FString StatsText = FString::Printf(TEXT("Health: %.0f | Hunger: %.0f | Thirst: %.0f | Energy: %.0f | Comfort: %.0f | Focus: %.0f\nCoords: %.0f %.0f %.0f\nItems: "),
 		VitalsComponent->Health,
 		VitalsComponent->Hunger,
 		VitalsComponent->Thirst,
-		VitalsComponent->Energy
+		VitalsComponent->Energy,
+		VitalsComponent->Comfort,
+		VitalsComponent->Focus,
+		Coords.X,
+		Coords.Y,
+		Coords.Z
 	);
 
 	int32 Index = 0;
@@ -209,44 +216,87 @@ void ALAPlayer::LookUpAtRate(float Rate)
 
 void ALAPlayer::Interact()
 {
+	bool bRemoveItem = false;
 	FItem& Item = InventoryComponent->GetSelected();
 	FString ItemName = Item.Name;
 	if (ItemName == "Wasp Nest" || ItemName == "Snake" || ItemName == "Rotten Apple")
 	{
-		VitalsComponent->TakeDamage(100);
+		// Remove 100 from health
+		VitalsComponent->TakeDamage(100.0f);
 		Item.Count--;
+		bRemoveItem = true;
 	}
 	else if (ItemName == "Blueberry" || ItemName == "Redberry" || ItemName == "Greenberry" || ItemName == "Yellowberry" || ItemName == "Apple" ||
 		ItemName == "Trail Mix" || ItemName == "Lunchly" || ItemName == "Deer Jerky" || ItemName == "Honeycomb")
 	{
-		VitalsComponent->Eat(40);
+		// Add 40 to hunger
+		VitalsComponent->Eat(40.0f);
 		Item.Count--;
+		bRemoveItem = true;
 	}
 	else if (ItemName == "Whistle")
 	{
-		// Dont worry if a different sound is playing
-		AudioComponent->SetSound(WhistleSound);
-		AudioComponent->Play();
+		if (!AudioComponent->IsPlaying())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Whistle sound is playing"));
+			AudioComponent->Stop();
+			AudioComponent->SetSound(WhistleSound);
+			AudioComponent->Play();
+		}
 	}
 	else if (ItemName == "Horn")
 	{
-		// Dont worry if a different sound is playing
-		AudioComponent->SetSound(HornSound);
-		AudioComponent->Play();
+		if (!AudioComponent->IsPlaying())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Horn sound is playing"));
+			AudioComponent->Stop();
+			AudioComponent->SetSound(HornSound);
+			AudioComponent->Play();
+		}
+	}
+	else if (ItemName == "Spring Water")
+	{
+		VitalsComponent->Drink(20.0f);
+		Item.Count--;
+		bRemoveItem = true;
+	}
+	else if (ItemName == "Sparkling Water")
+	{
+		VitalsComponent->Drink(80.0f);
+		Item.Count--;
+		bRemoveItem = true;
+	}
+	else if (ItemName == "Sleeping Bag")
+	{
+		VitalsComponent->Sleep(FMath::RandRange(2.0f, 4.0f));
+		Item.Count--;
+		bRemoveItem = true;
+	}
+	// Remove item from inventory
+	if (bRemoveItem && Item.Count == 0) {
+		InventoryComponent->RemoveItem(Item);
 	}
 }
 
 void ALAPlayer::ScrollInventory(float Value)
 {
-	int32 NewValue = InventoryComponent->SelectedItem += (int)Value;
-	if (NewValue < 0)
+	if (Value != 0.0f)
 	{
-		// Scroll around to other side of inventory
-		InventoryComponent->SelectedItem = InventoryComponent->GetItems().Num() - 1;
-	}
-	else if (NewValue > InventoryComponent->GetItems().Num())
-	{
-		InventoryComponent->SelectedItem = 0;
+		int32 NewValue = InventoryComponent->SelectedItem += (int)Value;
+		// if new value is greater than MAX then set to 0
+		if (NewValue > InventoryComponent->GetItems().Num() - 1)
+		{
+			InventoryComponent->SelectedItem = 0;
+		}
+		// if new value is less than 0 then set to MAX
+		else if (NewValue < 0)
+		{
+			InventoryComponent->SelectedItem = InventoryComponent->GetItems().Num() - 1;
+		}
+		// otherwise set the new value
+		else {
+			InventoryComponent->SelectedItem = NewValue;
+		}
 	}
 }
 

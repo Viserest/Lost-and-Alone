@@ -39,6 +39,15 @@ void UInventoryComponent::AddItem(FString Name, int32 Count)
 	}
 }
 
+void UInventoryComponent::RemoveItem(FItem& Item)
+{
+	int32 Index = Items.Find(Item);
+	if (Index != INDEX_NONE)
+	{
+		Items.RemoveAt(Index);
+	}
+}
+
 TArray<FItem> UInventoryComponent::GetItems()
 {
 	return Items;

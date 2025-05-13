@@ -47,5 +47,8 @@ private:
 	UPROPERTY()
 	UClass* BolderBPClass = nullptr;
 
+	UPROPERTY()
+	UClass* CityBPClass = nullptr;
+
 	void GenerateTerrain(int32 SizeX, int32 SizeY);
 };

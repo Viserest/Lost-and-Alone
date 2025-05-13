@@ -50,6 +50,9 @@ void ACarePackageBase::BeginPlay()
 	case 23: ItemName = "Bow"; break;
 	case 24: ItemName = "Whistle"; break;
 	case 25: ItemName = "Horn"; break;
+	case 26: ItemName = "Spring Water"; break;
+	case 27: ItemName = "Sparkling Water"; break;
+	case 28: ItemName = "Sleeping Bag"; break;
 	}
 
 	// Tools can only have 1

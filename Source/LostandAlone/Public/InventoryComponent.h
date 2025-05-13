@@ -14,6 +14,11 @@ struct FItem {
 
 	UPROPERTY()
 	int32 Count;
+
+	bool operator==(const FItem& Other) const
+	{
+		return Name == Other.Name;
+	}
 };
 
 
@@ -32,6 +37,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void AddItem(FString Name, int32 Count);
+	void RemoveItem(FItem& Item);
 	TArray<FItem> GetItems();
 	FItem& GetSelected();
 

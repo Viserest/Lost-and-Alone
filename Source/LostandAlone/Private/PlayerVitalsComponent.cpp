@@ -35,8 +35,8 @@ void UPlayerVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Hunger = FMath::Clamp(Hunger - 2.0f * DeltaTime, 0, MaxOfVital); // 250 seconds (4m10s) until pain
 	Thirst = FMath::Clamp(Thirst - 3.0f * DeltaTime, 0, MaxOfVital); // 167 seconds (2m47s) until pain
 	Energy = FMath::Clamp(Energy - 1.0f * DeltaTime, 0, MaxOfVital); // 500 seconds (8m20s) until pain
-    Comfort = FMath::Clamp(Energy - 1.0f * DeltaTime, 0, MaxOfVital);
-    Focus = FMath::Clamp(Energy - 1.0f * DeltaTime, 0, MaxOfVital);
+    Comfort = FMath::Clamp(Comfort - 2.0f * DeltaTime, 0, MaxOfVital);
+    Focus = FMath::Clamp(Focus - 1.0f * DeltaTime, 0, MaxOfVital);
 
     /*
     Negative effects
@@ -54,10 +54,15 @@ void UPlayerVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
     /*
     Positive effects
     */
-	// If hunger and thirst is 80% full
+	// If hunger and thirst is 80% full add health
 	if (Hunger >= MaxOfVital * 0.8f && Thirst >= MaxOfVital * 0.8f)
 	{
 		Health = FMath::Clamp(Health + 3.0f * DeltaTime, 0, MaxOfVital); // Add health until full
+	}
+	// If thirst is 70% full add focus
+	if (Thirst >= MaxOfVital * 0.7f)
+	{
+		Focus = FMath::Clamp(Focus + 0.5f * DeltaTime, 0, MaxOfVital);
 	}
 }
 
@@ -65,6 +70,7 @@ void UPlayerVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 void UPlayerVitalsComponent::Eat(float Amount)
 {
 	Hunger = FMath::Clamp(Hunger + Amount, 0.0f, MaxOfVital);
+	Energy = FMath::Clamp(Energy + Amount, 0.0f, MaxOfVital);
 }
 
 // Player should only be able to drink 30-60 each drink
@@ -76,12 +82,14 @@ void UPlayerVitalsComponent::Drink(float Amount)
 // Player should only be able to sleep 2-4 hours (Duration is by hour)
 void UPlayerVitalsComponent::Sleep(float Duration)
 {
-	Energy = FMath::Clamp(Energy + Duration * 10.0f, 0.0f, MaxOfVital);
+	Energy = FMath::Clamp(Energy + Duration * 12.0f, 0.0f, MaxOfVital);
+	Focus = FMath::Clamp(Focus + Duration * 5.0f, 0.0f, MaxOfVital);
+	Comfort = FMath::Clamp(Comfort + Duration * 8.0f, 0.0f, MaxOfVital);
 }
 
 // Player should only lose 10-20 health per hit
 void UPlayerVitalsComponent::TakeDamage(float Amount)
 {
-	Health = FMath::Clamp(Health + Amount, 0.0f, MaxOfVital);
+	Health = FMath::Clamp(Health - Amount, 0.0f, MaxOfVital);
 }
 

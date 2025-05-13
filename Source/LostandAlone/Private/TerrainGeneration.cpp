@@ -48,6 +48,12 @@ ATerrainGeneration::ATerrainGeneration()
     {
         BolderBPClass = (UClass*)BolderBlueprint.Object->GeneratedClass;
     }
+
+    static ConstructorHelpers::FObjectFinder<UBlueprint> CityBlueprint(TEXT("Blueprint'/Game/Meshes/BP_Cityscape.BP_Cityscape'"));
+    if (CityBlueprint.Succeeded())
+    {
+        CityBPClass = (UClass*)CityBlueprint.Object->GeneratedClass;
+    }
 }
 
 void ATerrainGeneration::BeginPlay()
@@ -91,87 +97,113 @@ void ATerrainGeneration::GenerateTerrain(int32 SizeX, int32 SizeY)
         int32 BolderX = FMath::RandRange(0, SizeY);
         for (int32 x = 0; x <= SizeX; x++)
         {
+            float TerrainNoise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + TerrainSeed);
+            float BiomeNoise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + BiomeSeed);
+            // Set location
             float XPos = x * Scale;
             float YPos = y * Scale;
-            float ZPos;
-            if (x == 0 || y == 0 || x == SizeX || y == SizeY) {
-                ZPos = 1000.0f;
+            float ZPos = TerrainNoise * HeightScale * PerlinMultiplier;
+
+            // Add mountain to small sections of spruce woods
+            if (BiomeNoise > 0.5f)
+            {
+                // Convert [0.5, 1] to [1,4]
+                ZPos *= BiomeNoise * 6.0f - 2.0f;
             }
-            else {
-                float Noise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + TerrainSeed);
-                ZPos = Noise * HeightScale * PerlinMultiplier;
-            }
+
             FVector Location = FVector(XPos, YPos, ZPos);
             FVector ActorLocation = FVector(XPos, YPos, ZPos) + GetActorLocation();
             Vertices.Add(Location);
             UVs.Add(FVector2D((float)x / SizeX, (float)y / SizeY));
 
-            if (ZPos == 1000.0f) {
+            // from x=0 to x=20 and x=SizeX-20 to x=SizeX
+            // from y=0 to y=20 and y=SizeY-20 to y=SizeY
+            if (x <= 20 || y <= 20 || x >= SizeX - 20 || y >= SizeY - 20) {
+                // is wall
                 VertexColors.Add(FColor::White);
-            }
-            else if (ZPos < -400.0f) {
-                VertexColors.Add(FColor(0, 0, 50));
+                if (x % 8 == 0 && y % 8 == 0)
+                {
+                    // move actor up or down
+                    FVector ModifiedZ = ActorLocation;
+                    ModifiedZ.Z += FMath::RandRange(0, 800);
+                    // slight wobble to the building
+                    FRotator Wobble(FMath::RandRange(-10, 10), FMath::RandRange(-10, 10), FMath::RandRange(-10, 10));
+                    GetWorld()->SpawnActor<AActor>(CityBPClass, ModifiedZ, Wobble);
+                }
             }
             else {
-                VertexColors.Add(FColor(0, 4, 0));
-
-                float AddChance = FMath::FRand();
-
-                // If current x equals the possible BuildingX
-                if (x == BuildingX)
+                // not wall
+                if (ZPos < -400.0f)
                 {
-                    // 5% chance of spawning
-                    if (AddChance < 0.05f)
-                    {
-                        BuildingCount++;
-                        GetWorld()->SpawnActor<AActor>(BuildingBPClass, ActorLocation, FRotator(0, 0, 0));
-                    }
+                    // pond
+                    VertexColors.Add(FColor(0, 0, 50));
                 }
-                // If current x equals the possible CarePackageX
-                else if (x == CarePackageX)
+                else if (ZPos > 2000.0f)
                 {
-                    // 40% chance of spawning
-                    if (AddChance < 0.2f)
-                    {
-                        PackageCount++;
-                        GetWorld()->SpawnActor<AActor>(CarePackageBPClass, ActorLocation, FRotator(0, 0, 0));
-                    }
+                    // mountain
+                    VertexColors.Add(FColor(100, 100, 100));
                 }
-                // If current x equals the possible BolderX
-                else if (x == BolderX)
-                {
-                    // 40% chance of spawning
-                    if (AddChance < 0.5f)
-                    {
-                        RockCount++;
-                        GetWorld()->SpawnActor<AActor>(BolderBPClass, ActorLocation, FRotator(0, 0, 0));
-                    }
-                }
-                // If nothing else can spawn then maybe place a tree
                 else {
-                    // 0.8% chance of spawning
-                    if (AddChance < 0.008f)
+                    VertexColors.Add(FColor(0, 4, 0));
+
+                    float AddChance = FMath::FRand();
+
+                    // If current x equals the possible BuildingX
+                    if (x == BuildingX)
                     {
-                        TreeCount++;
-                        float BiomeNoise = FMath::PerlinNoise2D(FVector2D(x, y) / PerlinMultiplier + BiomeSeed);
-                        // From (-1 to -0.3)
-                        if (BiomeNoise < -0.3f)
+                        // 5% chance of spawning
+                        if (AddChance < 0.05f)
                         {
-                            GetWorld()->SpawnActor<AActor>(TreeDeadBPClass, ActorLocation, FRotator(0, 0, 0));
-                        }
-                        // From [-0.3 to 0.3]
-                        else if (BiomeNoise >= -0.3f && BiomeNoise <= 0.3f)
-                        {
-                            GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, ActorLocation, FRotator(0, 0, 0));
-                        }
-                        // From (0.3 to 1)
-                        else if (BiomeNoise > 0.3f)
-                        {
-                            GetWorld()->SpawnActor<AActor>(TreeSpruceBPClass, ActorLocation, FRotator(0, 0, 0));
+                            BuildingCount++;
+                            GetWorld()->SpawnActor<AActor>(BuildingBPClass, ActorLocation, FRotator(0, 0, 0));
                         }
                     }
-                }
-            }
+                    // If current x equals the possible CarePackageX
+                    else if (x == CarePackageX)
+                    {
+                        // 40% chance of spawning
+                        if (AddChance < 0.2f)
+                        {
+                            PackageCount++;
+                            GetWorld()->SpawnActor<AActor>(CarePackageBPClass, ActorLocation, FRotator(0, 0, 0));
+                        }
+                    }
+                    // If current x equals the possible BolderX
+                    else if (x == BolderX)
+                    {
+                        // 40% chance of spawning
+                        if (AddChance < 0.5f)
+                        {
+                            RockCount++;
+                            GetWorld()->SpawnActor<AActor>(BolderBPClass, ActorLocation, FRotator(0, 0, 0));
+                        }
+                    }
+                    // If nothing else can spawn then maybe place a tree
+                    else {
+                        // 0.8% chance of spawning
+                        if (AddChance < 0.008f)
+                        {
+                            TreeCount++;
+
+                            // From (-1 to -0.3)
+                            if (BiomeNoise < -0.3f)
+                            {
+                                GetWorld()->SpawnActor<AActor>(TreeDeadBPClass, ActorLocation, FRotator(0, 0, 0));
+                            }
+                            // From [-0.3 to 0.3]
+                            else if (BiomeNoise >= -0.3f && BiomeNoise <= 0.3f)
+                            {
+                                GetWorld()->SpawnActor<AActor>(TreeBlueprintClass, ActorLocation, FRotator(0, 0, 0));
+                            }
+                            // From (0.3 to 1)
+                            else if (BiomeNoise > 0.3f)
+                            {
+                                GetWorld()->SpawnActor<AActor>(TreeSpruceBPClass, ActorLocation, FRotator(0, 0, 0));
+                            }
+                        }
+                    }
+                } // end of land
+            } // end of not wall
         }
     }
 
